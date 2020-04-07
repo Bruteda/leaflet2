@@ -1,6 +1,3 @@
-let first;
-
-
 const onLoad = async() => {
 
     let map = L.map('mapid').setView([60.487, 15.409], 13); //create the map layer 
@@ -14,29 +11,56 @@ const onLoad = async() => {
         zoomOffset: -1
     }).addTo(map);
 
-    await $.getJSON('http://localhost:3000/shops/', (data) => {
-        first = data;
-    })
+    let data = [];
 
-    L.geoJSON(first, {
-        style: (feature) => {
-            return {
-                color: "#000000"
+    await $.getJSON('http://localhost:3000/shops/', (json) => {
+
+        // console.log(json.features)
+        data = json;
+    });
+
+    console.log(data)
+
+    var geojsonMarkerOptions = {
+        radius: 20,
+        fillColor: "#ff7800",
+        color: "#000",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.8
+    };
+
+    // L.geoJSON(data).addTo(map)
+
+    for (let i = 0; i < data.features.length; i++) {
+        const element = data.features[i];
+        console.log()
+        let marker = L.geoJSON(element, {
+            pointToLayer: (feature, latlng) => {
+
+
+                if (feature.properties.Typ === 'Ombud') {
+                    geojsonMarkerOptions.fillColor = '#FFFFFF'
+
+                }
+                //return L.marker(latlng, geojsonMarkerOptions).addTo(map);
+                return L.circleMarker(latlng, geojsonMarkerOptions);
             }
 
-        }
+        }).addTo(map);
 
-    }).addTo(map);
+        marker.bindPopup(element.properties.Namn);
 
-
-
-    let lineCoords = [];
-
-    for (let i = 0; i < data.length; i++) {
-        const element = data[i];
-
-        lineCoords.push([element.coo])
 
     }
 
+
+
+
 };
+
+const onEachPoint = () => {
+
+    console.log("jupp   ")
+
+}
