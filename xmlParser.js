@@ -68,13 +68,14 @@ const parsed = parser.parseString(xml_string, (error, result) => {
                 geometry: {
                     type: "Point",
                     coordinates: converter(clean(list[i].RT90x), clean(list[i].RT90y))
+
                 }
             }
             out.features.push(element);
         }
 
         let data = JSON.stringify(out);
-        fs.writeFileSync('student-2.json', data);
+        fs.writeFileSync('shops.json', data);
 
 
         console.log(out);

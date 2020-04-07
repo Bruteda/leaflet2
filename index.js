@@ -5,7 +5,7 @@ const path = require('path');
 
 app.get('/shops/', (req, res) => {
 
-    res.sendFile(path.join(__dirname, '', 'student-2.json'));
+    res.sendFile(path.join(__dirname, '', 'shops.json'));
     //res.send('Hello World!')}
 });
 

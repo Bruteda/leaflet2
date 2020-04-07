@@ -18,7 +18,17 @@ const onLoad = async() => {
         first = data;
     })
 
-    L.geoJSON(first).addTo(map);
+    L.geoJSON(first, {
+        style: (feature) => {
+            return {
+                color: "#000000"
+            }
+
+        }
+
+    }).addTo(map);
+
+
 
     let lineCoords = [];
 
