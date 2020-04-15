@@ -65,6 +65,18 @@ const onLoad = async() => {
 
         }
 
+        marker.on('click', () => {
+            console.log(element.geometry.coordinates[0])
+
+            console.log(element.geometry.coordinates[1])
+
+            getStops(element.geometry.coordinates[0], element.geometry.coordinates[0])
+                //getStops(18.062795475074314, 59.3341999987611)
+
+
+
+        })
+
 
         marker.bindPopup(createPopup(element));
 
@@ -87,35 +99,6 @@ const onLoad = async() => {
     // overlays will be switched with checkboxes.
     L.control.layers(overlays).addTo(map);
 
-
-    /*
-    for (let i = 0; i < data.features.length; i++) {
-        const element = data.features[i];
-    
-        let marker = L.geoJSON(element, {
-            pointToLayer: (feature, latlng) => {
-
-                if (feature.properties.Typ === 'Ombud') {
-                    geojsonMarkerOptions.fillColor = '#FFFFFF'
-                    return L.circleMarker(latlng, geojsonMarkerOptions);
-
-                }
-            }
-
-        }).addTo(map);
-
-
-        marker.bindPopup("<h1>" + element.properties.Namn + "</h1>" +
-            "<h2>" + element.properties.Typ + "</h2>");
-
-
-    }
-
-*/
-
-
-
-
 };
 
 
@@ -124,28 +107,52 @@ const onLoad = async() => {
 const createPopup = (feature) => {
 
     let container = document.createElement('div');
-    container.classList.add('container');
+    container.classList.add('card');
+    container.width = 500;
 
-    let header = document.createElement('h1')
-    header.innerHTML = feature.properties.Nr
-
+    let header = document.createElement('h4')
+    header.innerHTML = feature.properties.Namn
+        //  header.classList.add('col-6')
 
     let img = document.createElement('img');
-    img.src = './img/butik.png'
+    // img.classList.add('col-6')
+
+    if (feature.properties.Typ == 'Ombud') {
+        img.src = './img/ombud.png'
+    } else {
+
+        img.src = './img/butik.png'
+    }
+
+    img.width = 200;
+
+    let infoContainer = document.createElement('div');
+    infoContainer.classList.add('col-12')
 
 
 
     let namn = document.createElement('p')
     namn.innerHTML = feature.properties.Namn;
 
+    let adress = document.createElement('p')
+    adress.innerHTML = feature.properties.Adress;
 
 
-    container.appendChild(header)
+    //infoContainer.appendChild(namn)
+    infoContainer.appendChild(adress)
+    infoContainer.appendChild(namn)
+
     container.appendChild(img)
-    container.appendChild(namn)
+    container.appendChild(header)
+    container.appendChild(infoContainer)
+
+
+
     return container
 
 }
+
+
 
 
 const onEachPoint = () => {
