@@ -47,9 +47,17 @@ const parsed = parser.parseString(xml_string, (error, result) => {
         //console.log((Array)(result.ButikerOmbud.ButikOmbud).length);
 
         let list = result.ButikerOmbud.ButikOmbud;
-        console.log(list[0]);
 
-        let out = {
+
+
+        //console.log(list[0]);
+
+        let outButik = {
+            type: "FeatureCollection",
+            features: []
+        }
+
+        let outButik = {
             type: "FeatureCollection",
             features: []
         }
