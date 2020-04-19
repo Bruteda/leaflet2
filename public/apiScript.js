@@ -23,4 +23,6 @@ const getStops = async(lat, lng) => {
 
     // console.log(url + key + originlat + originlng + format);
 
+    return result
+
 }

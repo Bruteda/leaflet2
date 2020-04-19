@@ -52,17 +52,34 @@ const parsed = parser.parseString(xml_string, (error, result) => {
 
         //console.log(list[0]);
 
-        let outButik = {
+
+        let out = {
             type: "FeatureCollection",
             features: []
         }
+
+        /*
 
         let outButik = {
             type: "FeatureCollection",
             features: []
         }
 
-        for (let i = 0; i < list.length; i++) {
+        let outButik = {
+            type: "FeatureCollection",
+            features: []
+        }
+
+*/
+
+        for (let i = 0; i < 1; i++) {
+
+            let str = clean(list[i].Oppettider);
+            console.log(str);
+            let arr = str.split(';;;0;_*');
+
+            console.log(arr)
+
             let element = {
                 type: "Feature",
                 properties: {
@@ -72,6 +89,7 @@ const parsed = parser.parseString(xml_string, (error, result) => {
                     Adress: clean(list[i].Address1),
                     Post: clean(list[i].Address3),
                     //Telefon: clean(list[i].Telefon)
+
                 },
                 geometry: {
                     type: "Point",

@@ -69,13 +69,16 @@ const onLoad = async() => {
 
         }
 
-        marker.on('click', () => {
+        marker.on('click', async() => {
             //console.log(element.geometry.coordinates[0])
 
             //console.log(element.geometry.coordinates[1])
 
-            getStops(element.geometry.coordinates[1], element.geometry.coordinates[0])
-                //getStops(18.062795475074314, 59.3341999987611)
+            let stops = await getStops(element.geometry.coordinates[1], element.geometry.coordinates[0])
+
+            console.log(stops);
+
+            //getStops(18.062795475074314, 59.3341999987611)
 
 
 
