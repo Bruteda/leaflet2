@@ -49,7 +49,11 @@ const onLoad = async() => {
                     geojsonMarkerOptions.fillColor = '#FFFFFF'
                     return L.circleMarker(latlng, geojsonMarkerOptions);
 
+                } else {
+                    geojsonMarkerOptions.fillColor = '#FF0000'
+                    return L.circleMarker(latlng, geojsonMarkerOptions);
                 }
+
             }
 
         })
