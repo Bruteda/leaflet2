@@ -21,7 +21,7 @@ const onLoad = async() => {
         data = json;
     });
 
-    console.log(data)
+    //console.log(data)
 
     var geojsonMarkerOptions = {
         radius: 20,
@@ -41,22 +41,24 @@ const onLoad = async() => {
 
         const element = data.features[i];
 
+        /*
+                let marker = L.geoJSON(element, {
+                    pointToLayer: (feature, latlng) => {
 
-        let marker = L.geoJSON(element, {
-            pointToLayer: (feature, latlng) => {
+                        if (feature.properties.Typ === 'Ombud') {
+                            geojsonMarkerOptions.fillColor = '#FFFFFF'
+                            return L.circleMarker(latlng, geojsonMarkerOptions);
 
-                if (feature.properties.Typ === 'Ombud') {
-                    geojsonMarkerOptions.fillColor = '#FFFFFF'
-                    return L.circleMarker(latlng, geojsonMarkerOptions);
+                        } else {
+                            geojsonMarkerOptions.fillColor = '#FF0000'
+                            return L.circleMarker(latlng, geojsonMarkerOptions);
+                        }
 
-                } else {
-                    geojsonMarkerOptions.fillColor = '#FF0000'
-                    return L.circleMarker(latlng, geojsonMarkerOptions);
-                }
+                    }
 
-            }
-
-        })
+                })
+        */
+        let marker = L.marker([element.geometry.coordinates[1], element.geometry.coordinates[0]])
 
         // console.log(element.properties.Typ == 'Butik')
 
