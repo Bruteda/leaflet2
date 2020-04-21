@@ -72,13 +72,17 @@ const parsed = parser.parseString(xml_string, (error, result) => {
 
 */
 
-        for (let i = 0; i < 1; i++) {
+        for (let i = 0; i < list.length; i++) {
 
             let str = clean(list[i].Oppettider);
-            console.log(str);
-            let arr = str.split(';;;0;_*');
+            // console.log(str);
+            let arr = str.split('_*');
+            for (let i = 0; i < arr.length; i++) {
+                arr[i] = arr[i].slice(0, 22);
 
-            console.log(arr)
+            }
+
+            //console.log(arr)
 
             let element = {
                 type: "Feature",
@@ -87,8 +91,12 @@ const parsed = parser.parseString(xml_string, (error, result) => {
                     Typ: clean(list[i].Typ),
                     Namn: clean(list[i].Namn),
                     Adress: clean(list[i].Address1),
-                    Post: clean(list[i].Address3),
-                    //Telefon: clean(list[i].Telefon)
+                    PostNr: clean(list[i].Address3),
+                    PostOrt: clean(list[i].Address4),
+
+                    Tider: arr
+                        //Telefon: clean(list[i].Telefon)
+
 
                 },
                 geometry: {
@@ -97,14 +105,24 @@ const parsed = parser.parseString(xml_string, (error, result) => {
 
                 }
             }
+
+            if (element.properties.Namn == "") {
+                element.properties.Namn = "Systembolaget"
+            }
+            if (list[i].Telefon != undefined) {
+                element.properties.Tel = clean(list[i].Telefon)
+
+            }
+
+
             out.features.push(element);
         }
 
         let data = JSON.stringify(out);
-        fs.writeFileSync('shops.json', data);
+        fs.writeFileSync('shopstmp.json', data);
 
 
-        console.log(out);
+        //console.log(out.features[0].properties);
     } else {
         console.log(error);
     }

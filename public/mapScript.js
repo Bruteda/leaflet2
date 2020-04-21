@@ -21,18 +21,6 @@ const onLoad = async() => {
         data = json;
     });
 
-    //console.log(data)
-
-    var geojsonMarkerOptions = {
-        radius: 20,
-        fillColor: "#ff7800",
-        color: "#000",
-        weight: 1,
-        opacity: 1,
-        fillOpacity: 0.8
-    };
-
-    // L.geoJSON(data).addTo(map)
 
     let butikLayer = L.layerGroup();
     let ombudLayer = L.layerGroup();
@@ -41,29 +29,10 @@ const onLoad = async() => {
 
         const element = data.features[i];
 
-        /*
-                let marker = L.geoJSON(element, {
-                    pointToLayer: (feature, latlng) => {
-
-                        if (feature.properties.Typ === 'Ombud') {
-                            geojsonMarkerOptions.fillColor = '#FFFFFF'
-                            return L.circleMarker(latlng, geojsonMarkerOptions);
-
-                        } else {
-                            geojsonMarkerOptions.fillColor = '#FF0000'
-                            return L.circleMarker(latlng, geojsonMarkerOptions);
-                        }
-
-                    }
-
-                })
-        */
         let marker = L.marker([element.geometry.coordinates[1], element.geometry.coordinates[0]])
 
-        // console.log(element.properties.Typ == 'Butik')
-
         if (element.properties.Typ == 'Butik') {
-            //console.log(element)
+            //console.log(marker)
             marker.addTo(butikLayer)
 
         } else {
@@ -72,13 +41,22 @@ const onLoad = async() => {
         }
 
         marker.on('click', async() => {
-            //console.log(element.geometry.coordinates[0])
 
-            //console.log(element.geometry.coordinates[1])
+
 
             let stops = await getStops(element.geometry.coordinates[1], element.geometry.coordinates[0])
 
             console.log(stops);
+
+
+            let weather = await getWeather(element.geometry.coordinates[1], element.geometry.coordinates[0])
+
+            console.log(weather);
+
+
+            let bing = await getBing(element.geometry.coordinates[1], element.geometry.coordinates[0])
+
+            console.log(bing);
 
             //getStops(18.062795475074314, 59.3341999987611)
 
