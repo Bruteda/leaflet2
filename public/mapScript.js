@@ -24,6 +24,7 @@ const onLoad = async() => {
 
     let butikLayer = L.layerGroup();
     let ombudLayer = L.layerGroup();
+    let stopLayer = L.layerGroup();
 
     for (let i = 0; i < data.features.length; i++) {
 
@@ -40,23 +41,72 @@ const onLoad = async() => {
 
         }
 
-        marker.on('click', async() => {
+
+        let popup = (createPopup(element))
 
 
+        marker.on('click', async(event) => {
 
             let stops = await getStops(element.geometry.coordinates[1], element.geometry.coordinates[0])
 
-            console.log(stops);
+            console.log(event);
+            stopLayer.clearLayers();
 
+            for (let i = 0; i < stops.StopLocation.length; i++) {
+                const stop = stops.StopLocation[i];
+
+                let stopMarker = L.marker([stop.lat, stop.lon]);
+
+                let tmpPop = await createStopPopUp(stop.id);
+
+                console.log(tmpPop)
+                stopMarker.bindPopup(tmpPop);
+
+                stopMarker.on('click', async() => {
+                    console.log(stop.id)
+                    let stopTimes = await getStopTimes(stop.id);
+                    let tmp = tmpPop.getElementsByClassName("timestable")[0]
+                    console.log(tmp)
+                    for (let i = 0; i < stopTimes.length; i++) {
+                        const stop = stopTimes[i];
+                        let row = document.createElement('tr');
+
+                        let lcell = document.createElement('td')
+                        lcell.innerHTML = stop.linje;
+                        let mcell = document.createElement('td')
+                        mcell.innerHTML = stop.mot;
+                        let tcell = document.createElement('td')
+                        tcell.innerHTML = stop.tid;
+
+                        row.appendChild(lcell);
+
+                        row.appendChild(mcell);
+
+                        row.appendChild(tcell);
+                        tmp.appendChild(row);
+                    }
+                    console.log(stopTimes)
+
+                })
+
+
+
+                stopMarker.addTo(stopLayer);
+
+
+            }
+
+            stopLayer.addTo(map);
 
             let weather = await getWeather(element.geometry.coordinates[1], element.geometry.coordinates[0])
 
-            console.log(weather);
-
+            let tmp = popup.getElementsByClassName("weatherp")[0]
+            tmp.innerHTML = "The temp is " + weather.temp + "&#8451 and " + weather.description;
+            console.log(tmp)
 
             let bing = await getBing(element.geometry.coordinates[1], element.geometry.coordinates[0])
 
-            console.log(bing);
+            //console.log(bing);
 
             //getStops(18.062795475074314, 59.3341999987611)
 
@@ -65,7 +115,7 @@ const onLoad = async() => {
         })
 
 
-        marker.bindPopup(createPopup(element));
+        marker.bindPopup(popup);
 
 
     }
@@ -94,8 +144,9 @@ const onLoad = async() => {
 const createPopup = (feature) => {
 
     let container = document.createElement('div');
-    container.classList.add('card');
-    container.width = 500;
+    //container.classList.add('card');
+    //container.width = 500;
+
 
     let header = document.createElement('h4')
     header.innerHTML = feature.properties.Namn
@@ -115,31 +166,71 @@ const createPopup = (feature) => {
 
     let infoContainer = document.createElement('div');
     infoContainer.classList.add('col-12')
-
+    infoContainer.style.height = "50px";
 
 
     let namn = document.createElement('p')
-    namn.innerHTML = feature.properties.Namn;
+    namn.innerHTML = "<strong>Adress</strong><br>" + feature.properties.Adress + "<br> " + feature.properties.PostNr + " " + feature.properties.PostOrt + "<br> Tel: " + feature.properties.Tel;
 
-    let adress = document.createElement('p')
-    adress.innerHTML = feature.properties.Adress;
+    let tider = document.createElement('table')
+    let open = document.createElement('p')
+    open.style.margin = "0px";
+    open.innerHTML = "<strong>Öppettider</strong><br>"
+    tider.classList.add('table')
+    let timediv = document.createElement('div')
+    timediv.classList.add('overflow-auto')
+    timediv.appendChild(tider)
+    timediv.style.height = "100px";
+    let tbody = document.createElement('tbody')
+    tider.appendChild(tbody)
+    for (let i = 0; i < feature.properties.Tider.length; i++) {
+        const element = feature.properties.Tider[i];
+        let row = document.createElement('tr')
+        let date = document.createElement('td')
+        let time = document.createElement('td')
+        let temp = element.split(";")
+        date.innerHTML = temp[0];
+        time.innerHTML = temp[1] + '-' + temp[2];
 
 
-    //infoContainer.appendChild(namn)
-    infoContainer.appendChild(adress)
+        row.appendChild(date);
+        row.appendChild(time);
+        tbody.appendChild(row);
+    }
+    let wp = document.createElement('p')
+    wp.classList.add("weatherp")
+
     infoContainer.appendChild(namn)
 
     container.appendChild(img)
     container.appendChild(header)
-    container.appendChild(infoContainer)
-
-
+    container.appendChild(namn)
+    container.appendChild(open)
+    container.appendChild(timediv)
+    container.appendChild(wp)
 
     return container
 
 }
 
 
+const createStopPopUp = async(stopid) => {
+
+    let container = document.createElement('div');
+
+    let rubrik = document.createElement('h4');
+    rubrik.innerHTML = "Avgångar"
+
+    let table = document.createElement('table');
+    table.classList.add("timestable");
+
+    table.innerHTML = "<thead><tr><th>Linje</th><th>Mot</th><th>Kl</th></tr></thead>"
+
+    container.appendChild(rubrik)
+    container.appendChild(table);
+    console.log(container)
+    return container;
+}
 
 
 const onEachPoint = () => {
