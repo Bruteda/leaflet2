@@ -33,10 +33,9 @@ const converter = (x, y) => {
         console.log(error)
     }
 
-    //console.log(proj4(sourcet, target, [x, y]));
-
 
 };
+
 
 
 
@@ -49,28 +48,10 @@ const parsed = parser.parseString(xml_string, (error, result) => {
         let list = result.ButikerOmbud.ButikOmbud;
 
 
-
-        //console.log(list[0]);
-
-
         let out = {
             type: "FeatureCollection",
             features: []
         }
-
-        /*
-
-        let outButik = {
-            type: "FeatureCollection",
-            features: []
-        }
-
-        let outButik = {
-            type: "FeatureCollection",
-            features: []
-        }
-
-*/
 
         for (let i = 0; i < list.length; i++) {
 
@@ -95,8 +76,6 @@ const parsed = parser.parseString(xml_string, (error, result) => {
                     PostOrt: clean(list[i].Address4),
 
                     Tider: arr
-                        //Telefon: clean(list[i].Telefon)
-
 
                 },
                 geometry: {
@@ -121,8 +100,6 @@ const parsed = parser.parseString(xml_string, (error, result) => {
         let data = JSON.stringify(out);
         fs.writeFileSync('shopstmp.json', data);
 
-
-        //console.log(out.features[0].properties);
     } else {
         console.log(error);
     }

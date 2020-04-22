@@ -30,7 +30,37 @@ const onLoad = async() => {
 
         const element = data.features[i];
 
-        let marker = L.marker([element.geometry.coordinates[1], element.geometry.coordinates[0]])
+        let markerIcon;
+
+        if (element.properties.Typ == 'Butik') {
+            markerIcon = new L.Icon({
+                iconUrl: './img/butikIcon.png',
+
+                iconSize: [30, 50], // size of the icon
+                // shadowSize: [50, 64], // size of the shadow
+                iconAnchor: [15, 50], // point of the icon which will correspond to marker's location
+                //shadowAnchor: [4, 62], // the same for the shadow
+                popupAnchor: [0, -50] // point from which the popup should open relative to the iconAnchor
+
+            });
+
+
+        } else {
+            markerIcon = new L.Icon({
+                iconUrl: './img/ombudIcon.png',
+
+                iconSize: [30, 50], // size of the icon
+                // shadowSize: [50, 64], // size of the shadow
+                iconAnchor: [10, 50], // point of the icon which will correspond to marker's location
+                //shadowAnchor: [4, 62], // the same for the shadow
+                popupAnchor: [0, -50] // point from which the popup should open relative to the iconAnchor
+
+            });
+
+        }
+
+
+        let marker = L.marker([element.geometry.coordinates[1], element.geometry.coordinates[0]], { icon: markerIcon })
 
         if (element.properties.Typ == 'Butik') {
             //console.log(marker)
@@ -42,31 +72,64 @@ const onLoad = async() => {
         }
 
 
-        let popup = (createPopup(element))
+        let popup = createPopup(element);
 
 
-        marker.on('click', async(event) => {
+        marker.on('click', async() => {
+
+
+            let weather = await getWeather(element.geometry.coordinates[1], element.geometry.coordinates[0])
+
+            //let bing = await getBing(element.geometry.coordinates[1], element.geometry.coordinates[0])
+
+            // console.log(bing);
+
+            let tmp = popup.getElementsByClassName("weatherp")[0]
+            tmp.innerHTML = "The temp is " + weather.temp + "&#8451 and " + weather.description;
+            console.log(tmp)
+
+
+
+        });
+
+
+        marker.on('dblclick', async(event) => {
+
+            //map.setView([element.geometry.coordinates[0], element.geometry.coordinates[1]]);
 
             let stops = await getStops(element.geometry.coordinates[1], element.geometry.coordinates[0])
 
-            console.log(event);
+            //console.log(event);
             stopLayer.clearLayers();
 
             for (let i = 0; i < stops.StopLocation.length; i++) {
                 const stop = stops.StopLocation[i];
 
-                let stopMarker = L.marker([stop.lat, stop.lon]);
 
-                let tmpPop = await createStopPopUp(stop.id);
+                let markerIcon = new L.Icon({
+                    iconUrl: './img/bussIcon.png',
 
-                console.log(tmpPop)
+                    iconSize: [20, 50], // size of the icon
+                    // shadowSize: [50, 64], // size of the shadow
+                    iconAnchor: [10, 50], // point of the icon which will correspond to marker's location
+                    //shadowAnchor: [4, 62], // the same for the shadow
+                    popupAnchor: [0, -50] // point from which the popup should open relative to the iconAnchor
+
+                });
+
+                let stopMarker = L.marker([stop.lat, stop.lon], { icon: markerIcon });
+                // console.log(stop)
+                let tmpPop = await createStopPopUp(stop.name);
+
                 stopMarker.bindPopup(tmpPop);
 
                 stopMarker.on('click', async() => {
-                    console.log(stop.id)
+                    //console.log(stop.id)
                     let stopTimes = await getStopTimes(stop.id);
                     let tmp = tmpPop.getElementsByClassName("timestable")[0]
                     console.log(tmp)
+
+
                     for (let i = 0; i < stopTimes.length; i++) {
                         const stop = stopTimes[i];
                         let row = document.createElement('tr');
@@ -79,17 +142,14 @@ const onLoad = async() => {
                         tcell.innerHTML = stop.tid;
 
                         row.appendChild(lcell);
-
                         row.appendChild(mcell);
 
                         row.appendChild(tcell);
                         tmp.appendChild(row);
                     }
-                    console.log(stopTimes)
+                    //console.log(stopTimes)
 
                 })
-
-
 
                 stopMarker.addTo(stopLayer);
 
@@ -97,43 +157,22 @@ const onLoad = async() => {
             }
 
             stopLayer.addTo(map);
-
-            let weather = await getWeather(element.geometry.coordinates[1], element.geometry.coordinates[0])
-
-            let tmp = popup.getElementsByClassName("weatherp")[0]
-            tmp.innerHTML = "The temp is " + weather.temp + "&#8451 and " + weather.description;
-            console.log(tmp)
-
-            let bing = await getBing(element.geometry.coordinates[1], element.geometry.coordinates[0])
-
-            //console.log(bing);
-
-            //getStops(18.062795475074314, 59.3341999987611)
-
-
+            map.closePopup(popup)
 
         })
 
 
-        marker.bindPopup(popup);
+        marker.bindPopup(popup) //.autoPan = false;
 
 
     }
-
-    //console.log(butikLayer);
-
     butikLayer.addTo(map);
     ombudLayer.addTo(map);
 
-
-
-    //overlay of layergroups
     var overlays = {
         "Butik": butikLayer,
         "Ombud": ombudLayer
     };
-    //Creates a layers control with the given layers.  
-    // overlays will be switched with checkboxes.
     L.control.layers(overlays).addTo(map);
 
 };
@@ -144,9 +183,6 @@ const onLoad = async() => {
 const createPopup = (feature) => {
 
     let container = document.createElement('div');
-    //container.classList.add('card');
-    //container.width = 500;
-
 
     let header = document.createElement('h4')
     header.innerHTML = feature.properties.Namn
@@ -200,6 +236,14 @@ const createPopup = (feature) => {
     let wp = document.createElement('p')
     wp.classList.add("weatherp")
 
+    let button = document.createElement('button');
+    button.innerHTML = "Hållplatser";
+    button.classList.add('btn');
+    button.addEventListener('click', (event) => {
+        console.log("naskdjnaösjdnö")
+    });
+
+
     infoContainer.appendChild(namn)
 
     container.appendChild(img)
@@ -208,18 +252,18 @@ const createPopup = (feature) => {
     container.appendChild(open)
     container.appendChild(timediv)
     container.appendChild(wp)
-
+    container.appendChild(button)
     return container
 
 }
 
 
-const createStopPopUp = async(stopid) => {
+const createStopPopUp = async(stopNamn) => {
 
     let container = document.createElement('div');
 
     let rubrik = document.createElement('h4');
-    rubrik.innerHTML = "Avgångar"
+    rubrik.innerHTML = stopNamn;
 
     let table = document.createElement('table');
     table.classList.add("timestable");
@@ -228,13 +272,6 @@ const createStopPopUp = async(stopid) => {
 
     container.appendChild(rubrik)
     container.appendChild(table);
-    console.log(container)
+    //   console.log(container)
     return container;
-}
-
-
-const onEachPoint = () => {
-
-    console.log("jupp   ")
-
 }
