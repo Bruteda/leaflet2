@@ -1,3 +1,9 @@
+/*
+    Script som hanterar httpRequests.
+
+*/
+
+
 const getStops = async(lat, lng) => {
 
     let url = "https://api.resrobot.se/v2/location.nearbystops"
@@ -20,7 +26,6 @@ const getWeather = async(lat, lng) => {
 
     let url = "http://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon=" + lng + "&units=metric&appid=" + key;
 
-
     let result = await $.getJSON(url);
 
     let out = {};
@@ -35,15 +40,10 @@ const getWeather = async(lat, lng) => {
 
 const getBing = async(lat, lng) => {
     let key = "ArQEgHCXdaLDpsAXiFPdAKdNbSPJw7uTSnFRr2wx4apGHstZE8dG2lFjxH3l4xNM"
-    let url = "http://dev.virtualearth.net/REST/v1/Routes/LocalInsights?waypoint=" + lat + "," + lng + "&maxTime=10&timeUnit=minutes&type=EatDrink&key=" + key
+    let types = "Bars"
+    let url = "http://dev.virtualearth.net/REST/v1/Routes/LocalInsights?waypoint=" + lat + "," + lng + "&maxTime=10&timeUnit=minutes&type=" + types + "&key=" + key
 
     let result = await $.getJSON(url)
-
-    // await $.getJSON(url, function(jsondata) {
-    //     result = jsondata.resourceSets[0].resources[0].categoryTypeResults[0].entities; // createWeatherPopUp(latLngObj,jsondata);           
-    // });
-
-    //console.log(result.resourceSets[0].resources[0].categoryTypeResults[0].entities)
 
     return result.resourceSets[0].resources[0].categoryTypeResults[0].entities;
 
@@ -60,11 +60,10 @@ const getStopTimes = async(stopid) => {
 
     let out = [];
 
-    // console.log(times.Departure)
 
     for (let i = 0; i < times.Departure.length; i++) {
+
         const dep = times.Departure[i];
-        //   console.log(dep)
         let outDep = {
             linje: dep.Product.num,
             mot: dep.direction,

@@ -1,8 +1,23 @@
+/*
+    Script som hanterar kartan, kartans lager med markers och popups.
+
+*/
+
+
+//Skapa upp kartan med center på borlänge.
+let map = L.map('mapid').setView([60.60811, 15.628738], 13);
+
+
+// De olika lagren
+let butikLayer = L.layerGroup();
+let ombudLayer = L.layerGroup();
+let stopLayer = L.layerGroup();
+let barLayer = L.layerGroup();
+
+
+//Körfunktion
 const onLoad = async() => {
 
-
-
-    let map = L.map('mapid').setView([60.487, 15.409], 13); //create the map layer 
     L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
         maxZoom: 18,
         attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
@@ -15,33 +30,29 @@ const onLoad = async() => {
 
     let data = [];
 
-    await $.getJSON('http://localhost:3000/shops/', (json) => {
 
-        // console.log(json.features)
+    //Hämtar data från json
+    await $.getJSON('shops.json', (json) => {
+
         data = json;
     });
 
 
-    let butikLayer = L.layerGroup();
-    let ombudLayer = L.layerGroup();
-    let stopLayer = L.layerGroup();
-
+    //Sätter ut markers
     for (let i = 0; i < data.features.length; i++) {
 
         const element = data.features[i];
 
         let markerIcon;
 
+        //Marker efter Butik/Ombud
         if (element.properties.Typ == 'Butik') {
             markerIcon = new L.Icon({
-                iconUrl: './img/butikIcon.png',
+                iconUrl: './img/butikIcon.png', //sökväg
 
-                iconSize: [30, 50], // size of the icon
-                // shadowSize: [50, 64], // size of the shadow
-                iconAnchor: [15, 50], // point of the icon which will correspond to marker's location
-                //shadowAnchor: [4, 62], // the same for the shadow
-                popupAnchor: [0, -50] // point from which the popup should open relative to the iconAnchor
-
+                iconSize: [30, 50], //Storlek
+                iconAnchor: [15, 50], //vart på bilden koordinaten ska vara
+                popupAnchor: [0, -50] //vart på bilen popupen ska sitta 
             });
 
 
@@ -49,12 +60,9 @@ const onLoad = async() => {
             markerIcon = new L.Icon({
                 iconUrl: './img/ombudIcon.png',
 
-                iconSize: [30, 50], // size of the icon
-                // shadowSize: [50, 64], // size of the shadow
-                iconAnchor: [10, 50], // point of the icon which will correspond to marker's location
-                //shadowAnchor: [4, 62], // the same for the shadow
-                popupAnchor: [0, -50] // point from which the popup should open relative to the iconAnchor
-
+                iconSize: [30, 50],
+                iconAnchor: [10, 50],
+                popupAnchor: [0, -50]
             });
 
         }
@@ -63,7 +71,7 @@ const onLoad = async() => {
         let marker = L.marker([element.geometry.coordinates[1], element.geometry.coordinates[0]], { icon: markerIcon })
 
         if (element.properties.Typ == 'Butik') {
-            //console.log(marker)
+
             marker.addTo(butikLayer)
 
         } else {
@@ -74,101 +82,52 @@ const onLoad = async() => {
 
         let popup = createPopup(element);
 
-
+        //EventListener för att uppdatera väder och bing.
         marker.on('click', async() => {
 
 
             let weather = await getWeather(element.geometry.coordinates[1], element.geometry.coordinates[0])
 
-            //let bing = await getBing(element.geometry.coordinates[1], element.geometry.coordinates[0])
-
-            // console.log(bing);
 
             let tmp = popup.getElementsByClassName("weatherp")[0]
-            tmp.innerHTML = "The temp is " + weather.temp + "&#8451 and " + weather.description;
-            console.log(tmp)
+            tmp.innerHTML = "<strong>Väder</strong><br>The temp is " + weather.temp + "&#8451 and " + weather.description;
+
+            let bing = await getBing(element.geometry.coordinates[1], element.geometry.coordinates[0])
+
+            let div = document.getElementById('bingContainer');
+            div.innerHTML = "";
+            tmpH = document.createElement('h4')
+            tmpH.innerHTML = "Barer i närheten";
+            div.appendChild(tmpH);
+
+            for (let i = 0; i < bing.length; i++) {
+                const bar = bing[i];
+                let row = document.createElement("h5");
 
 
+                // Eventlistener för att visa marker för bar.
+                row.addEventListener('click', (event) => {
 
-        });
-
-
-        marker.on('dblclick', async(event) => {
-
-            //map.setView([element.geometry.coordinates[0], element.geometry.coordinates[1]]);
-
-            let stops = await getStops(element.geometry.coordinates[1], element.geometry.coordinates[0])
-
-            //console.log(event);
-            stopLayer.clearLayers();
-
-            for (let i = 0; i < stops.StopLocation.length; i++) {
-                const stop = stops.StopLocation[i];
-
-
-                let markerIcon = new L.Icon({
-                    iconUrl: './img/bussIcon.png',
-
-                    iconSize: [20, 50], // size of the icon
-                    // shadowSize: [50, 64], // size of the shadow
-                    iconAnchor: [10, 50], // point of the icon which will correspond to marker's location
-                    //shadowAnchor: [4, 62], // the same for the shadow
-                    popupAnchor: [0, -50] // point from which the popup should open relative to the iconAnchor
-
-                });
-
-                let stopMarker = L.marker([stop.lat, stop.lon], { icon: markerIcon });
-                // console.log(stop)
-                let tmpPop = await createStopPopUp(stop.name);
-
-                stopMarker.bindPopup(tmpPop);
-
-                stopMarker.on('click', async() => {
-                    //console.log(stop.id)
-                    let stopTimes = await getStopTimes(stop.id);
-                    let tmp = tmpPop.getElementsByClassName("timestable")[0]
-                    console.log(tmp)
-
-
-                    for (let i = 0; i < stopTimes.length; i++) {
-                        const stop = stopTimes[i];
-                        let row = document.createElement('tr');
-
-                        let lcell = document.createElement('td')
-                        lcell.innerHTML = stop.linje;
-                        let mcell = document.createElement('td')
-                        mcell.innerHTML = stop.mot;
-                        let tcell = document.createElement('td')
-                        tcell.innerHTML = stop.tid;
-
-                        row.appendChild(lcell);
-                        row.appendChild(mcell);
-
-                        row.appendChild(tcell);
-                        tmp.appendChild(row);
-                    }
-                    //console.log(stopTimes)
+                    barLayer.clearLayers();
+                    let barMarker = L.marker([bar.latitude, bar.longitude])
+                    barMarker.addTo(barLayer);
 
                 })
 
-                stopMarker.addTo(stopLayer);
-
+                // Skriver ut bar med listpunkt före
+                row.innerHTML = "&#8226 " + bar.entityName;
+                div.appendChild(row);
 
             }
 
-            stopLayer.addTo(map);
-            map.closePopup(popup)
-
-        })
-
-
-        marker.bindPopup(popup) //.autoPan = false;
-
-
+        });
+        marker.bindPopup(popup)
     }
     butikLayer.addTo(map);
     ombudLayer.addTo(map);
+    barLayer.addTo(map);
 
+    // Lagerhantering
     var overlays = {
         "Butik": butikLayer,
         "Ombud": ombudLayer
@@ -177,8 +136,9 @@ const onLoad = async() => {
 
 };
 
-
-
+/*
+    Funktion  för att skapa huvud-popup
+*/
 
 const createPopup = (feature) => {
 
@@ -186,15 +146,12 @@ const createPopup = (feature) => {
 
     let header = document.createElement('h4')
     header.innerHTML = feature.properties.Namn
-        //  header.classList.add('col-6')
 
     let img = document.createElement('img');
-    // img.classList.add('col-6')
 
     if (feature.properties.Typ == 'Ombud') {
         img.src = './img/ombud.png'
     } else {
-
         img.src = './img/butik.png'
     }
 
@@ -202,7 +159,7 @@ const createPopup = (feature) => {
 
     let infoContainer = document.createElement('div');
     infoContainer.classList.add('col-12')
-    infoContainer.style.height = "50px";
+    infoContainer.style.maxHeight = "50px";
 
 
     let namn = document.createElement('p')
@@ -219,49 +176,74 @@ const createPopup = (feature) => {
     timediv.style.height = "100px";
     let tbody = document.createElement('tbody')
     tider.appendChild(tbody)
+
     for (let i = 0; i < feature.properties.Tider.length; i++) {
         const element = feature.properties.Tider[i];
         let row = document.createElement('tr')
         let date = document.createElement('td')
         let time = document.createElement('td')
-        let temp = element.split(";")
-        date.innerHTML = temp[0];
-        time.innerHTML = temp[1] + '-' + temp[2];
+        let tmp = element.split(";")
+        date.innerHTML = tmp[0];
+
+        //Hanterar stängda dagar
+        if (tmp[1] != '00:00') {
+            time.innerHTML = tmp[1] + '-' + tmp[2];
+
+        } else {
+            time.innerHTML = 'Stängt';
+
+        }
 
 
         row.appendChild(date);
         row.appendChild(time);
         tbody.appendChild(row);
+
     }
+
+
     let wp = document.createElement('p')
     wp.classList.add("weatherp")
 
     let button = document.createElement('button');
-    button.innerHTML = "Hållplatser";
+    button.innerHTML = "Hållplatser i närheten";
     button.classList.add('btn');
+
+    button.classList.add('btn-outline-secondary');
+
+    // Eventlistener som visar hållpatser
     button.addEventListener('click', (event) => {
-        console.log("naskdjnaösjdnö")
+
+        createStops(feature.geometry.coordinates[1], feature.geometry.coordinates[0]);
+        map.closePopup();
+        map.setView([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], zoom = 15)
+
     });
 
 
     infoContainer.appendChild(namn)
-
     container.appendChild(img)
     container.appendChild(header)
     container.appendChild(namn)
-    container.appendChild(open)
-    container.appendChild(timediv)
+
+    // Finns inga öppettider på ombud.
+    if (feature.properties.Typ != "Ombud") {
+        container.appendChild(open)
+        container.appendChild(timediv)
+    }
     container.appendChild(wp)
     container.appendChild(button)
     return container
 
 }
 
-
+/*
+    Funktion som skapar popup för hållplatser
+*/
 const createStopPopUp = async(stopNamn) => {
 
     let container = document.createElement('div');
-
+    container.style.minWidth = "50px";
     let rubrik = document.createElement('h4');
     rubrik.innerHTML = stopNamn;
 
@@ -270,8 +252,70 @@ const createStopPopUp = async(stopNamn) => {
 
     table.innerHTML = "<thead><tr><th>Linje</th><th>Mot</th><th>Kl</th></tr></thead>"
 
+
     container.appendChild(rubrik)
     container.appendChild(table);
-    //   console.log(container)
+
     return container;
 }
+
+/*
+    Funktion som skapar markers för hållplatser.
+*/
+
+const createStops = async(lat, lng) => {
+
+    let stops = await getStops(lat, lng)
+
+    stopLayer.clearLayers();
+
+    for (let i = 0; i < stops.StopLocation.length; i++) {
+        const stop = stops.StopLocation[i];
+
+
+        let markerIcon = new L.Icon({
+            iconUrl: './img/bussIcon.png',
+
+            iconSize: [20, 50],
+            iconAnchor: [10, 50],
+            popupAnchor: [0, -50]
+        });
+
+        let stopMarker = L.marker([stop.lat, stop.lon], { icon: markerIcon });
+        let tmpPop = await createStopPopUp(stop.name);
+
+        stopMarker.bindPopup(tmpPop);
+
+
+        //Eventlistener för hållpats popup
+        stopMarker.on('click', async() => {
+            let stopTimes = await getStopTimes(stop.id);
+            let tmp = tmpPop.getElementsByClassName("timestable")[0]
+
+            for (let i = 0; i < stopTimes.length; i++) {
+                const stop = stopTimes[i];
+                let row = document.createElement('tr');
+
+                let lcell = document.createElement('td')
+                lcell.innerHTML = stop.linje;
+                let mcell = document.createElement('td')
+                mcell.innerHTML = stop.mot;
+                let tcell = document.createElement('td')
+                tcell.innerHTML = stop.tid;
+
+                row.appendChild(lcell);
+                row.appendChild(mcell);
+
+                row.appendChild(tcell);
+                tmp.appendChild(row);
+            }
+
+        })
+
+        stopMarker.addTo(stopLayer);
+
+    }
+
+    stopLayer.addTo(map);
+
+};
